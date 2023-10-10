@@ -8,17 +8,24 @@ from nltk.stem import RSLPStemmer #biblioteca de Stemming
 #download de recursos necessários
 nltk.download('stopwords') #esta função é responsável por baixar os stopwords
 nltk.download('rslp')
+nltk.download('punkt') 
 
 #Verificar se o número correto de argumentos da linha de comando foi fornecido
-if len(sys.argv) != 2:
-    print("Uso coreto: python modelo_booleano.py base_samba\base.txt")
+if len(sys.argv) != 3:
+    print("Uso correto: python modelo_booleano.py arquivoBase arquivoConsulta")
     sys.exit(1)
 
 #Le o caminho do arquivo em base.txt e o armazena em uma variável
 base_file_path = sys.argv[1] 
+#Le o caminho do arquivo em consulta.txt e o armazena em uma variável
+arquivoConsulta = sys.argv[2]
 
 if not os.path.isfile(base_file_path):
     print("Arquivo não foi encontrado em {base_file_path}") #se o caminho não existe encerra o programa
+    sys.exit(1)
+
+if not os.path.isfile(arquivoConsulta):
+    print("Arquivo não foi encontrado em {arquivoConsulta}") #se o caminho não existe encerra o programa
     sys.exit(1)
 
 lista_caminhos = []
@@ -28,19 +35,13 @@ with open(base_file_path, 'r') as arquivo_base:
     for linha in arquivo_base:
         lista_caminhos.append(linha.strip()) #strip remove os espaços do inicio
 
-"""#Imprime os caminhos
-print("caminhos dos documentos da base:")
-for caminho in lista_caminhos:
-    print(caminho)
-"""
-
 #Iteração com todos os caminhos do documento e cria uma lista de palavras
 palavras = []
 for caminho in lista_caminhos:
     caminho_completo = os.path.join('base_samba', caminho)
     with open(caminho_completo, 'r') as arquivo: #abre o atual caminho para leitura !Não encontra o arquivo
         for linha in arquivo:
-            palavras.extend(linha.split()) #split permite dividir uma string em palavras
+            #palavras.extend(nltk.word_tokenize(linha)) #cria uma lista de palavras
             palavras_e_minusculo = [palavra.lower() for palavra in palavras]#Já que palavras Maiúsculas e minusculas devem ser tratadas igualmente, então é necessário transformar as palavras em minusculas
 
 #Filtro de palavras que não são interessantes (stopwords) em portugues
@@ -57,70 +58,97 @@ palavras_stem.reverse() #inverte a ordem
 
 indice_invertido = {}  #Dicionário para armazenar os termos e os caminhos
 
-#Atualizar o indice invertido com os termos e seus respectivos documentos
-#----------------------------------------------------------------------------------------------------
-for indice, caminho in enumerate(lista_caminhos, start=1): #O número do documento é dado com base na linha que se encontra dentro do arquivo, começando em 1
-    caminho_completo = os.path.join('base_samba', caminho) #Único jeito de conseguir fazer com que seja possível acessar o folder 'base_dados' sem tirar os arquivos do folder
+# Atualizar o índice invertido com termos, números de documentos e frequência
+for indice, caminho in enumerate(lista_caminhos, start=1): #npumero do docuemnto é dado com base na linha que se encontra dentro do arquivo base.txt, começando em 1
+    caminho_completo = os.path.join('base_samba', caminho) #unico jeito que consegui fazer com que seja possível acessar o folder
     with open(caminho_completo, 'r') as arquivo:
         for linha in arquivo:
-            palavras = linha.split()
+            palavras = nltk.word_tokenize(linha)
             for palavra in palavras:
-                if palavra not in stopwords_em_portugues: #verifica se a palavra não é uma stopword
-                    palavra_stem = stemmer.stem(palavra) #aplica a parada para pegar só o radical 
+                if palavra not in stopwords_em_portugues: #verifica se a palavra não é um stopword
+                    palavra_stem = stemmer.stem(palavra) #aplica a parada para pegar só o radical
                     if palavra_stem in indice_invertido:
-                        if indice not in indice_invertido[palavra_stem]: # Se o termo já existe no índice, adiciona o número do documento
-                            indice_invertido[palavra_stem].append(indice)
+                        termo = indice_invertido[palavra_stem] #se o termo ja existe no índice, adiciona o número do documento e a frequência
+                        if termo and termo[-1][0] == indice: #se o termo já existe no índice, adiciona a frequência
+                            termo[-1] = (indice, termo[-1][1] + 1)
+                        else:
+                            termo.append((indice, 1))
                     else:
-                        indice_invertido[palavra_stem] = [indice] # Se o termo não existe no índice vai criar uma nova entrada com o número do documento
+                        indice_invertido[palavra_stem] = [(indice, 1)] 
 
-#----------------------------------------------------------------------------------------------------
-
-#indice invertido com termo, caminho e frequência
-for termo, ocorrencias in indice_invertido.items():
-    caminhos = []
-    print(f'{termo}: ')
-    for caminho in ocorrencias:
-        if caminho not in caminhos:
-            caminhos.append(caminho)
-    frequencia = len(caminhos)
-    print(frequencia)
-    print(caminhos)
-    print()
-    
-#Gravar o indice invertido em um arquivo texto
+# Gravar o índice invertido em um arquivo de texto
 arquivo_saida = 'indice.txt'
 def salvar_indice_invertido(indice_invertido, nome_arquivo):
     with open(nome_arquivo, 'w', encoding='utf-8') as arquivo_saida:
-        for termo, numeros_documentos in indice_invertido.items():
-            numeros_documentos_formatados = ', '.join(map(str, numeros_documentos))
-            arquivo_saida.write(f'{termo}:{numeros_documentos_formatados}\n')
+        for termo, documentos_frequencias in indice_invertido.items(): 
+            documentos_formatados = ', '.join([f'{doc_num},{freq}' for doc_num, freq in documentos_frequencias]) #cria uma lista de tuplas
+            arquivo_saida.write(f'{termo}: {documentos_formatados}\n')
 
 salvar_indice_invertido(indice_invertido, arquivo_saida)
 
-
 #Consultas
-#Abrir o arquivo de consulta, pegar os termos e transformar em uma lista
-caminho_consulta = 'base_samba\consulta.txt'
-def ler_consulta(caminho_consulta):
-    termos = []
-    with open(caminho_consulta, 'r') as arquivo_consulta:
+#Abrir o arquivo de consulta e pegar os termos 
+#caminho_consulta = 'base_samba\consulta.txt'
+def ler_consulta(arquivoConsulta):
+    with open(arquivoConsulta, 'r') as arquivo_consulta:
         consulta = arquivo_consulta.read()
-        palavras = consulta.split()
-        termos.extend([palavra.replace('!', '') for palavra in palavras if palavra not in ['&', '!', '|']])
-        termos = [stemmer.stem(palavra) for palavra in termos] # Pegar só o radical porque é o que está no índice invertido
-    return termos
+    return consulta
+
+consulta = ler_consulta(arquivoConsulta)
+print(consulta)
+
+#tokeinizar a consulta
+def tokenizar_consulta(consulta):
+    tokens = nltk.tokenize.word_tokenize(consulta) #tokenizar em palavras individuais e símbolos
+    return tokens
+
+tokens = tokenizar_consulta(ler_consulta(arquivoConsulta))
+print(tokens)
+
+#Avaliar consulta
+def avaliar_consulta(tokens, indice_invertido): 
+    resultado = set() #inicializa como um conj vazio
+    operador = None
+    for token in tokens: 
+        if token == '&':
+            operador = 'and'
+        elif token == '|':
+            operador = 'or'
+        elif token == '!':
+            operador = 'not'
+        else:
+            termo_stem = stemmer.stem(token)  # aplica stemming
+            if operador is None:
+                if termo_stem in indice_invertido: 
+                    resultado = set([doc for doc, freq in indice_invertido[termo_stem]])
+                else:
+                    resultado = set()  # Termo não existe no índice, conjunto vazio
+            else:
+                if termo_stem in indice_invertido:
+                    documentos_termo = set([doc for doc, freq in indice_invertido[termo_stem]])
+                else:
+                    documentos_termo = set()
+                if operador == 'and':
+                    resultado = resultado.intersection(documentos_termo)
+                elif operador == 'or':
+                    resultado = resultado.union(documentos_termo)
+                elif operador == 'not':
+                    print(operador)
+                    resultado.difference_update(documentos_termo)
+            operador = None  # Limpa o operador após usá-lo
+    return resultado
+
+resultado = avaliar_consulta(tokens, indice_invertido)
+print(resultado)
 
 
-print(ler_consulta(caminho_consulta))
+#gravar o resultado em um arquivo
+def salvar_resultado(resultado, arquivo_resposta, lista_caminhos):
+    with open(arquivo_resposta, 'w', encoding='utf-8') as arquivo_resposta:
+        arquivo_resposta.write(f'{len(resultado)}\n')
+        for nome in resultado:
+            nome_arquivo = lista_caminhos[nome -1]
+            arquivo_resposta.write(f'{nome_arquivo}\n') #nome dos docs que satisfazem a consulta
 
-#Mapear os termos para o índice
-def mapear_termos(termos):
-    termos_mapeados = {}
-    for termo in termos:
-        termos_mapeados[termo] = indice_invertido[termo]
-    return termos_mapeados
-            
-termos_mapeados = mapear_termos(ler_consulta(caminho_consulta))
-print(termos_mapeados)
-
-#Avalia a consulta, levando em conta os termos booleanos
+arquivo_resposta = 'resposta.txt'
+salvar_resultado(resultado, arquivo_resposta, lista_caminhos)
