@@ -12,13 +12,14 @@ import os
 import math
 from nltk.corpus import stopwords
 from nltk.stem import RSLPStemmer
+from nltk.tokenize import word_tokenize
 
 # Faça o download dos recursos necessários
 nltk.download('stopwords')
 nltk.download('rslp')
 nltk.download('punkt')
 
-# Verifique se o número correto de argumentos da linha de comando foi fornecido
+# Verifica se o número correto de argumentos da linha de comando foi fornecido
 if len(sys.argv) != 3:
     print("Uso correto: python modelo_vetorial.py base.txt consulta.txt")
     sys.exit(1)
@@ -114,6 +115,7 @@ for termo, documentos in indice_invertido.items():
             TF[doc] = {termo: tf_termo_no_doc}
         else:
             TF[doc][termo] = tf_termo_no_doc
+#print(TF)
 
 # Cálculo do IDF
 num_documentos_total = len(lista_caminhos)
@@ -121,6 +123,7 @@ IDF = {}
 for termo, documentos in indice_invertido.items():
     idf_termo = math.log10(num_documentos_total / len(documentos))
     IDF[termo] = idf_termo
+#print(IDF)
 
 # Cálculo do TF-IDF
 TF_IDF = {}
@@ -128,26 +131,28 @@ for doc, termos in TF.items():
     TF_IDF[doc] = {}
     for termo, tf in termos.items():
         TF_IDF[doc][termo] = tf * IDF[termo]
-
+print(TF_IDF)
 
 # Gravar dados dos pesos no arquivo pesos.txt
 dados_pesos = {}
 for doc, termos in TF_IDF.items():
     dados_docs = []
     for termo, peso in termos.items():
-        if peso > 0:
+        if peso > 0 and termo not in ['?', '.', '!']: #Fiz a remoção dos pontos na mão mesmo antes de colocar no documento *(se tiver tempo voltar e tentar de outro jeito)*
             dados_docs.append((termo, peso))
     if dados_docs:
         dados_pesos[lista_caminhos[doc - 1]] = dados_docs
 
 with open('pesos.txt', 'w') as arquivo_pesos:
     for doc, termos in dados_pesos.items():
-        arquivo_pesos.write(f'{doc}: {" ".join([f"{termo}, {peso:.4f} " for termo, peso in termos if termo])}\n')
+        arquivo_pesos.write(f'{doc}: {"   ".join([f"{termo}, {peso:.4f} " for termo, peso in termos if termo])}\n') #doc1.txt:  W, 0.1845	X, 0.3010
+        print("peso.txt")
+        print(f'{doc}: {"   ".join([f"{termo}, {peso:.4f} " for termo, peso in termos if termo])}\n')
 
 
-# Mapear nomes de arquivos para índices de doc porque ficava preso so no primeiro doc 
+# Mapeamento dos nomes de arquivos para índices de doc porque ficava preso so no primeiro doc (enumerar)
 nome_para_indice = {nome_arquivo: indice + 1 for indice, nome_arquivo in enumerate(lista_caminhos)}
-
+print(nome_para_indice)
 
 # Cálculo de Similaridade
 similaridade_resultados = []
@@ -170,16 +175,6 @@ for doc, termos in TF_IDF.items():  # Itera sobre todos os doc na base
 
 # Ordena os resultados por similaridade
 similaridade_resultados.sort(key=lambda x: x[1], reverse=True)
-
-"""
-03/11
-Estava funcionando perfeitamente para a consulta 1
-mas não funciona para a consulta 2 porque ela tem o & igual no cod do booleano
-lembrar de pegar aquele trecho 
-04/11
-tambem ficava preso so no primeiro doc pq tava TF_IDF[1][termo_stem] no calc da similaridade
-ai fazia com que dasse 0 na segunda consulta tbm
-"""
 
 
 # trecho de avaliar a consulta com os simbolos do codigo de mod booleano 
@@ -221,7 +216,19 @@ print(resultado)
 similaridade_resultados.sort(key=lambda x: x[1], reverse=True)
 
 # Grava os resultados no arquivo resposta.txt
-with open('resposta.txt', 'w') as arquivo_resposta:
+with open('resposta.txt', 'w') as arquivo_resposta: #devolvendo o peso sempre 0.2276 ????
     arquivo_resposta.write(f"{len(similaridade_resultados)}\n")
     for doc, similaridade in similaridade_resultados:
         arquivo_resposta.write(f"{doc} {similaridade:.4f}\n")
+        print("resposta.txt")
+        print(f"{doc} {similaridade:.4f}")
+
+"""
+03/11
+Estava funcionando perfeitamente para a consulta 1
+mas não funciona para a consulta 2 porque ela tem o & igual no cod do booleano
+lembrar de pegar aquele trecho 
+04/11
+tambem ficava preso so no primeiro doc pq tava TF_IDF[1][termo_stem] no calc da similaridade
+ai fazia com que dasse 0 na segunda consulta tbm
+"""
