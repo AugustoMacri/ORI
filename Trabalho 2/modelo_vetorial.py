@@ -66,7 +66,6 @@ palavras_sem_stopwords = [palavra for palavra in palavras_e_minusculo if palavra
 stemmer = RSLPStemmer()
 palavras_stem = [stemmer.stem(palavra) for palavra in palavras_sem_stopwords]
 
-# Índice Invertido
 palavras_stem = sorted(palavras_stem)
 palavras_stem.reverse()
 
@@ -145,16 +144,16 @@ for doc, termos in TF_IDF.items():
 
 with open('pesos.txt', 'w') as arquivo_pesos:
     for doc, termos in dados_pesos.items():
-        arquivo_pesos.write(f'{doc}: {"   ".join([f"{termo}, {peso:.4f} " for termo, peso in termos if termo])}\n') #doc1.txt:  W, 0.1845	X, 0.3010
+        arquivo_pesos.write(f'{doc}: {"   ".join([f"{termo}, {peso:.4f} " for termo, peso in termos if termo])}\n') #formatacao: doc1.txt:  W, 0.1845	X, 0.3010
         print("peso.txt")
         print(f'{doc}: {"   ".join([f"{termo}, {peso:.4f} " for termo, peso in termos if termo])}\n')
 
 
-# Mapeamento dos nomes de arquivos para índices de doc porque ficava preso so no primeiro doc (enumerar)
+#enumerar os docs
 nome_para_indice = {nome_arquivo: indice + 1 for indice, nome_arquivo in enumerate(lista_caminhos)}
 print(nome_para_indice)
 
-# Cálculo de Similaridade
+# Calculo de Similaridade
 similaridade_resultados = []
 
 for doc, termos in TF_IDF.items():  # Itera sobre todos os doc na base
@@ -216,7 +215,7 @@ print(resultado)
 similaridade_resultados.sort(key=lambda x: x[1], reverse=True)
 
 # Grava os resultados no arquivo resposta.txt
-with open('resposta.txt', 'w') as arquivo_resposta: #devolvendo o peso sempre 0.2276 ????
+with open('resposta.txt', 'w') as arquivo_resposta:
     arquivo_resposta.write(f"{len(similaridade_resultados)}\n")
     for doc, similaridade in similaridade_resultados:
         arquivo_resposta.write(f"{doc} {similaridade:.4f}\n")
@@ -231,4 +230,7 @@ lembrar de pegar aquele trecho
 04/11
 tambem ficava preso so no primeiro doc pq tava TF_IDF[1][termo_stem] no calc da similaridade
 ai fazia com que dasse 0 na segunda consulta tbm
+6/11
+se eu mudar a consulta.txt para engracada ou amor, sempre vai devolver 0.2276
+mas se a consulta for casa, ele devolve 0 sempre 
 """
