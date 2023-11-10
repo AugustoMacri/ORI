@@ -154,6 +154,7 @@ with open('pesos.txt', 'w') as arquivo_pesos:
         print("peso.txt")
         print(f'{doc}: {"   ".join([f"{termo}, {peso:.4f} " for termo, peso in termos if termo])}\n')
 
+# Cálculo do TF-IDF retornando o mesmo peso do corretor 
 
 #enumerar os docs
 nome_para_indice = {nome_arquivo: indice + 1 for indice, nome_arquivo in enumerate(lista_caminhos)}
@@ -202,7 +203,7 @@ def calcular_similaridade(consulta, lista_caminhos, nome_para_indice, IDF, TF_ID
             if termo_stem in vetor_de_consulta:
                 vetor_de_consulta[termo_stem] += 1  # Incrementa a frequência do termo na consulta
             else:
-                vetor_de_consulta[termo_stem] = 1  # Inicia a frequência do termo na consulta como 1
+                vetor_de_consulta[termo_stem] = 1  
 
     # Calcular a similaridade para cada documento
     for doc, termos in TF_IDF.items():
@@ -224,8 +225,9 @@ def calcular_similaridade(consulta, lista_caminhos, nome_para_indice, IDF, TF_ID
             nome_documento = lista_caminhos[doc - 1]
             similaridade_result.append((nome_documento, similaridade))
 
-    similaridade_result.sort(key=lambda x: x[1], reverse=True)
+    similaridade_result.sort(key=lambda x: x[1], reverse=True) #Ordena por similaridade
 
+    # Gravar dados dos pesos no arquivo pesos.txt
     with open('resposta.txt', 'w') as arquivo_resposta:
         arquivo_resposta.write(f'{len(similaridade_result)}\n')
         for nome_doc, similaridade in similaridade_result:
@@ -233,5 +235,14 @@ def calcular_similaridade(consulta, lista_caminhos, nome_para_indice, IDF, TF_ID
 
     return similaridade_result
 
+#chamada a função
 similaridades = calcular_similaridade(consulta, lista_caminhos, nome_para_indice, IDF, TF_IDF)
 print(similaridades)
+
+"""
+# No calculo de similaridade valores não estão dando exatamente iguais a do corretor
+consulta 1 
+corretor: 5563
+codigo: a.txt 0.5375
+corrigir se der tempo
+"""
