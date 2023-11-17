@@ -59,7 +59,7 @@ for caminho in lista_caminhos:
             palavras_e_minusculo = [palavra.lower() for palavra in palavras]
 
 # Filtro de palavras que não são interessantes (stopwords) em português
-stopwords_em_português = set(stopwords.words('portuguese'))
+stopwords_em_português = set(stopwords.words('portuguese') + [';', '.', '?', ',', '!', ':'])
 palavras_sem_stopwords = [palavra for palavra in palavras_e_minusculo if palavra not in stopwords_em_português]
 
 # Stemming = reduzir palavras a seu radical
@@ -143,7 +143,7 @@ calculcar_tf_idf(tokens, indice_invertido)
 for doc, termos in TF_IDF.items():
     dados_docs = []
     for termo, peso in termos.items():
-        if peso > 0 and termo not in ['?', '.', '!']: #Fiz a remoção dos pontos na mão mesmo antes de colocar no documento *(se tiver tempo voltar e tentar de outro jeito)*
+        if peso > 0: 
             dados_docs.append((termo, peso))
     if dados_docs:
         dados_pesos[lista_caminhos[doc - 1]] = dados_docs
@@ -245,4 +245,18 @@ consulta 1
 corretor: 5563
 codigo: a.txt 0.5375
 corrigir se der tempo
+
+Provavelmente o erro ocorre por conta dos pontos que estão sendo calculados o peso 
+
+O erro ocorria por causa que estava calculando o peso dos pontos, por isso dava uma diferença mínima com o corretor 
+
+Peso atual:
+a.txt: engrac, 0.4771    nao, 0.2291    tet, 0.4771    nad, 0.4771 
+b.txt: nao, 0.1761    qu, 0.2291    mor, 0.1761    tamb, 0.4771 
+c.txt: qu, 0.2291    mor, 0.1761    comig, 0.6207    am, 0.4771    fac, 0.4771    favor, 0.4771 
+
+resposta atual:
+1
+a.txt 0.5564
+
 """
