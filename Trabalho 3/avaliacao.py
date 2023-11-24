@@ -3,8 +3,13 @@ Modelo de avalicação com gráficos
 
 Nome: Augusto Fernandes Macri
 Matrícula: 12111BSI221
+
+matplotlib n funcionava, baixar:
+pip install matplotlib
+
 """
 import sys
+import matplotlib.pyplot as plt
 
 def ler_arq(arquivo):
     try:
@@ -56,30 +61,41 @@ print(f"Revocação: {revocacao}")"""
 
 #Calcular precisão e revocação para todas as consultas
 result_precisao = []
-reult_revoc = []
+result_revoc = []
 
 for i in range(num_consultas):
     precisao, revocacao = calcular_prec_revoc(respostas_ideais[i], respostas_sistema[i])
     result_precisao.append(precisao)
-    reult_revoc.append(revocacao)
+    result_revoc.append(revocacao)
+    #print(f"Consulta {i + 1}: Precisão: {precisao}, Revocação: {revocacao}")
 
-"""#Teste todas as consultas
-for i, (p, r) in enumerate(zip(result_precisao, reult_revoc)):
-    print(f"Consulta {i + 1}: Precisao: {p}, Revocacao: {r}")"""
 
 #Interpolação da prec e revoc
+#Tá devolvendo sempre o memo valor 
+#zip faz com que seja criado uma lista de tuplas onde cada tupla contem um par (revoc, prec)
+niveis_revocacao = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]# Níveis de revocação de 0 a 1 em incrementos de 0.1
 def interpolar_valores(precisao, revocacao):
     niveis_revocacao = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]  # Níveis de revocação de 0 a 1 em incrementos de 0.1
     valores_interp = []
 
+    precisao_ordenada, revocacao_ordenada = zip(*sorted(zip(precisao, revocacao), key=lambda x: x[1]))
+
+    print(f"Precis ord: {precisao_ordenada}")
+    print(f"Revoc ord {revocacao_ordenada}")
+
     for nivel in niveis_revocacao:
-        max_precisao = max([p for r, p in zip(revocacao, precisao) if r >= nivel], default=0)
-        valores_interp.append(max_precisao)
+        valores_nivel = [p for r, p in zip(revocacao_ordenada, precisao_ordenada) if r >= nivel]
+        if valores_nivel:
+            closest_value = min(valores_nivel, key=lambda x: abs(x - nivel))
+            valores_interp.append(closest_value)
+        else:
+            valores_interp.append(0)
+
+        print(f"Nível de revocação: {nivel}, Valores de precisão: {valores_nivel}")
 
     return valores_interp
 
-#Exemplo para uma consulta específica (altere para iterar sobre todas as consultas):
-consulta = 0  #Índice da consulta
-valores_interpolados_por_consulta = []
+"""a = interpolar_valores(result_precisao, result_revoc)
+print(a)"""
 
-
+# Interpolação da precisão e revocação para cada consulta
