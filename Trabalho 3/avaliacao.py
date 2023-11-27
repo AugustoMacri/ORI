@@ -36,6 +36,8 @@ if __name__ == "__main__": #verifica se o programa está sendo executado diretam
     nome_arquivo = sys.argv[1]
     num_consultas, respostas_ideais, respostas_sistema = ler_arq(nome_arquivo)
 
+#print(respostas_ideais)
+#print(respostas_sistema)
 
 #Calcular Precisão e Revocação para cada consulta 
 def calcular_prec_revoc(respostas_ideal, resposta_sistema):
@@ -48,7 +50,6 @@ def calcular_prec_revoc(respostas_ideal, resposta_sistema):
     return precisao, revocacao
 
 
-#Calcular precisão e revocação para todas as consultas
 result_precisao = []
 result_revoc = []
 
@@ -81,12 +82,10 @@ def interpolar_valores(precisao, revocacao):
 
     return valores_interp
 
-print(result_precisao)
-print(result_revoc)
+"""print("!!!!Valores apos a interpolacao!!!!")
+valores_interpolados = interpolar_valores(result_precisao, result_revoc)
+print("Valores interpolados:", valores_interpolados)"""
 
-
-"""a = interpolar_valores(result_precisao, result_revoc)
-print(a)"""
 
 #Interpolação da prec e revoc para cada consulta (na referencia e para sair 3 consultas)
 valores_interpolados_por_consulta = []
