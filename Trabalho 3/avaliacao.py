@@ -81,7 +81,7 @@ valores_interpolados_por_consulta = []
 for i in range(num_consultas):
     precisoes, revocacoes = calcular_prec_revoc(respostas_ideais[i], respostas_sistema[i])
     
-    # interp para cada consulta
+    #interp para cada consulta
     valores_interp = interpolar_valores(precisoes, revocacoes)
     valores_interpolados_por_consulta.append(valores_interp)
 
@@ -89,6 +89,11 @@ for i in range(num_consultas):
 
 #calcular a media dos valores 
 media_precisao = np.mean(valores_interpolados_por_consulta, axis=0)
+
+#Colocar medias no arquivo media.txt
+with open('media.txt', 'w') as arquivo:
+    for precisao in media_precisao:
+        arquivo.write(f'{precisao:.2f} ')
 
 #Plotação dos graficos
 #disposiçao dos graficos 
@@ -109,7 +114,7 @@ for i, valores in enumerate(valores_interpolados_por_consulta[:num_linhas*num_co
     axs[linha, coluna].legend()
     axs[linha, coluna].grid(True)
 
-# Plotar o gráfico da média na última posição
+#Gráfico da média
 axs[num_linhas-1, num_colunas-1].plot(niveis_revocacao, media_precisao, marker='o', linestyle='-', label='Média de Todas as Consultas')
 axs[num_linhas-1, num_colunas-1].set_xlabel('Revocação')
 axs[num_linhas-1, num_colunas-1].set_ylabel('Precisão')
